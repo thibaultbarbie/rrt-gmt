@@ -11,7 +11,7 @@ use std::io::prelude::*;
     
 pub fn dataset_generation(n_data: usize, n_obs: usize, collision_limit: f64){
     let mut rng = rand::thread_rng();
-    let mut dataset : Vec<ProbSol> = Vec::new(); 
+    let mut dataset : Vec<ProbSol> = Vec::with_capacity(n_data); 
 
     while dataset.len() < n_data {
         // x
@@ -41,7 +41,7 @@ pub fn dataset_generation(n_data: usize, n_obs: usize, collision_limit: f64){
                                            0.05,
                                            1000);
         match result {
-            Err(e) => println!("Error : {}",e),
+            Err(_) => {},
             Ok(traj) => { let n=traj.len() as u32;
                           if n>7 {
                               let xi=vec![traj[(n/6) as usize][0],traj[(n/6) as usize][1],
@@ -51,13 +51,15 @@ pub fn dataset_generation(n_data: usize, n_obs: usize, collision_limit: f64){
                                           traj[(5*n/6)as usize][0],traj[(5*n/6)as usize][1]];
                               dataset.push(ProbSol{x: x,xi :xi});
                           }
-                          else {println!("Trajectory found too short")};
+                          //else {println!("Trajectory found too short")};
             },
         }
     }
+    println!("Dataset created, beginning of serialization");
     let serialized = serde_json::to_string(&dataset).unwrap();
     let mut file = File::create("dataset.dat").unwrap();
     file.write_all(serialized.into_bytes().as_slice()).unwrap();
+    println!("Dataset written as a file");
 }
 
 pub fn load_dataset() -> Vec<ProbSol> {
