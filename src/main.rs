@@ -44,6 +44,7 @@ fn main() {
     let n_gaussians =2;
     let total_dim = 2*(2+n_obs)+2*5;
     let n_test=100_000;
+    let epsilon = 0.01;
     
     // Dataset generation
     if generate {dataset::dataset_generation(n_data,n_obs,collision_limit);}
@@ -98,14 +99,15 @@ fn main() {
                                                vec![between.ind_sample(&mut rng),
                                                     between.ind_sample(&mut rng)]
                                            },
-                                           0.05,
+                                           epsilon,
                                            1000);
         match result {
             Err(_) => {},
             Ok(sol) => {rrt_iter.push(sol.iterations as u64)},
         }
 
-        // GMT RRT-connect        
+        // GMT RRT-connect
+        let prediction = gmt::gmt(x.clone(), n_gaussians, 2*(2+n_obs), 2*5, &gmm);
         let result = rrt::rrt_connect_gmt(&vec![x[0],x[1]],
                                           &vec![x[2],x[3]],
                                           |p: &[f64]| !is_colliding(&x, &p.to_vec(),
@@ -116,8 +118,9 @@ fn main() {
                                                vec![between.ind_sample(&mut rng),
                                                     between.ind_sample(&mut rng)]
                                            },
-                                          0.05,
-                                          1000);
+                                          epsilon,
+                                          1000,
+                                          prediction);
         match result {
             Err(_) => {},
             Ok(sol) => {rrt_gmt_iter.push(sol.iterations as u64)},
@@ -128,5 +131,11 @@ fn main() {
     let mean_rrt_gmt_iter = rrt_gmt_iter.iter().fold(0, |sum, i| sum+i) as f64 / n_test as f64;
     
     //let result = gmt::gmt(list_x,n_gaussians,2*(2+n_obs),10,gmm);
-    println!("RRT-Connect : {}    RRT-Connect : {}", mean_rrt_iter, mean_rrt_gmt_iter);
+    println!("RRT-Connect :");
+    println!("     Iterations {}  Success {} %",mean_rrt_iter,
+             rrt_iter.len() as f64 *100.0 / n_test as f64);
+    println!();
+    println!("RRT-Connect Gmt :");
+    println!("     Iterations {}  Success {} %",mean_rrt_iter,
+             rrt_gmt_iter.len() as f64 *100.0 / n_test as f64);
 }

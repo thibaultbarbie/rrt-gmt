@@ -235,7 +235,8 @@ pub fn rrt_connect_gmt<FF, FR>(start: &[f64],
                                mut is_free: FF,
                                random_sample: FR,
                                extend_length: f64,
-                               num_max_try: usize,) -> Result<RRTSolution, String>
+                               num_max_try: usize,
+                               traj_prediction: Vec<Vec<f64>>) -> Result<RRTSolution, String>
     where
     FF: FnMut(&[f64]) -> bool,
     FR: Fn() -> Vec<f64>,
@@ -248,7 +249,11 @@ pub fn rrt_connect_gmt<FF, FR>(start: &[f64],
     for i in 0..num_max_try {
         info!("tree_a = {:?}", tree_a.vertices.len());
         info!("tree_b = {:?}", tree_b.vertices.len());
-        let q_rand = random_sample();
+
+        let q_rand =
+            if i<traj_prediction.len()/2 {traj_prediction[i].clone()}
+            else {random_sample()};
+        
         let extend_status = tree_a.extend(&q_rand, extend_length, &mut is_free);
         match extend_status {
             ExtendStatus::Trapped => {}

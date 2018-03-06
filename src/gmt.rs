@@ -84,10 +84,10 @@ fn pdf_normal(e: &Ellipsoid, d: &DVector<f64>,x_dim: usize, xi_dim: usize) -> f6
     e.beta-((d-mu1).transpose()*phi*(d-mu2)).as_slice()[0]
 }
 
-pub fn gmt(list_x: Vec<Vec<f64>>, n_gaussians: usize,
-       x_dim: usize, xi_dim: usize, ellipsoids: Vec<Ellipsoid>) -> Vec<Vec<f64>>{
+pub fn gmt(x: Vec<f64>, n_gaussians: usize,
+       x_dim: usize, xi_dim: usize, ellipsoids: &Vec<Ellipsoid>) -> Vec<Vec<f64>>{
 
-    
+    let list_x=vec![x];
     let mut list_xi : Vec<Vec<f64>> = Vec::new();
     for x in list_x {
 
