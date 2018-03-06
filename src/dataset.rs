@@ -51,19 +51,18 @@ pub fn dataset_generation(n_data: usize, n_obs: usize, collision_limit: f64){
                                           traj[(5*n/6)as usize][0],traj[(5*n/6)as usize][1]];
                               dataset.push(ProbSol{x: x,xi :xi});
                           }
-                          //else {println!("Trajectory found too short")};
             },
         }
     }
     println!("Dataset created, beginning of serialization");
     let serialized = serde_json::to_string(&dataset).unwrap();
-    let mut file = File::create("dataset.dat").unwrap();
+    let mut file = File::create("dataset/dataset.dat").unwrap();
     file.write_all(serialized.into_bytes().as_slice()).unwrap();
     println!("Dataset written as a file");
 }
 
 pub fn load_dataset() -> Vec<ProbSol> {
-    let mut file = File::open("dataset.dat").unwrap();
+    let mut file = File::open("dataset/dataset.dat").unwrap();
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
     let dataset: Vec<ProbSol> = serde_json::from_str(&contents).unwrap();
