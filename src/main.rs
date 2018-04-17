@@ -8,6 +8,9 @@ extern crate rusty_machine;
 extern crate kdtree;
 #[macro_use]
 extern crate log;
+extern crate indicatif;
+
+use indicatif::{ProgressBar,ProgressStyle};
 
 use na::{DVector,DMatrix};
 use rusty_machine::learning::gmm::GaussianMixtureModel;
@@ -35,15 +38,16 @@ mod gmt;
 mod rrt;
 
 fn main() {
-    let generate = false;
-    let training_gmm = false;
     
+    let generate = true;
+    let training_gmm = false;
     let n_obs=10;
     let collision_limit=0.05;
+    
     let n_data = 10_000;
-    let n_gaussians =2;
+    let n_gaussians = 2;
     let total_dim = 2*(2+n_obs)+2*5;
-    let n_test=100_000;
+    let n_test=1_000;
     let epsilon = 0.01;
     
     // Dataset generation
@@ -70,6 +74,7 @@ fn main() {
 
 
     // Testing
+    
     let mut rng = rand::thread_rng();
     let x_range = Range::new(0.001, 0.999);
 
@@ -87,7 +92,15 @@ fn main() {
     
     let mut rrt_gmt_iter : Vec<u64> = Vec::new();
     let mut rrt_iter : Vec<u64> = Vec::new();
+
+    println!("Testing");
+    let pb = ProgressBar::new(n_test as u64); 
+    pb.set_style(ProgressStyle::default_bar()
+                 .template("{spinner:.green} [{bar:40.cyan/blue}] {pos:>7}/{len:7} ({eta})")
+                 .progress_chars("#>-"));
     for x in list_x {
+        pb.inc(1);
+        
         // Simple RRT-connect
         let result = rrt::dual_rrt_connect(&vec![x[0],x[1]],
                                            &vec![x[2],x[3]],
@@ -125,10 +138,14 @@ fn main() {
             Err(_) => {},
             Ok(sol) => {rrt_gmt_iter.push(sol.iterations as u64)},
         }
+         
 
     }
-    let mean_rrt_iter = rrt_iter.iter().fold(0, |sum, i| sum+i) as f64 / n_test as f64;
+    pb.finish();
+    
+    let mean_rrt_iter     = rrt_iter.iter().fold(    0, |sum, i| sum+i) as f64 / n_test as f64;
     let mean_rrt_gmt_iter = rrt_gmt_iter.iter().fold(0, |sum, i| sum+i) as f64 / n_test as f64;
+
     
     //let result = gmt::gmt(list_x,n_gaussians,2*(2+n_obs),10,gmm);
     println!("RRT-Connect :");
@@ -138,4 +155,5 @@ fn main() {
     println!("RRT-Connect Gmt :");
     println!("     Iterations {}  Success {} %",mean_rrt_iter,
              rrt_gmt_iter.len() as f64 *100.0 / n_test as f64);
+
 }
